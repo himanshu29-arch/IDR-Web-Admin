@@ -2,99 +2,96 @@ import { useEffect, useState } from "react";
 import Header from "../../Components/Header";
 import AdminSideNavbar from "../../Components/AdminSideNavbar";
 import { useDispatch, useSelector } from "react-redux";
+import { getIdrEquipmentById, updateEquipment } from "../../actions/idrEquipmentAction"; 
 import { getLocationInventory } from "../../actions/locationsInventoryAction";
-import { getInventoryById, updateInventory } from "../../actions/inventoryAction";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import Loader from "../../Images/ZZ5H.gif";
 
-const EditInventory = () => {
+const EditEquipment = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { inventory_id } = useParams();
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [loading, setLoading] = useState(false); // State to track loading status
-  const loadingInventory = useSelector((state) => state.inventory.loading);
-  const availableLocations = useSelector((state) => state.locationInventory.locations);
-
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const type = queryParams.get('type');
+  const { idr_equipment_id } = useParams();
+  const [loading, setLoading] = useState(false);
   const [editableFields, setEditableFields] = useState({
-    quantity: "",
-    description: "",
+    serial_number: "",
     make: "",
+    model: "",
     device_type: "",
-    color: "",
-    size: "",
+    mac_address: "",
+    location_name: "",
+    description: "",
     location_id: "",
   });
 
   const [readOnlyFields, setReadOnlyFields] = useState({
-    model: "",
-    qr: "",
+    image: "",
+    serial_number: "",
   });
 
   const [isEditing, setIsEditing] = useState(false);
   const { user_type } = useSelector((state) => state.user.user);
   const { access } = useSelector((state) => state.user);
+  const locationsInventory = useSelector(
+    (state) => state.locationInventory.locations
+  );
 
   const handleEditToggle = () => {
     setIsEditing(!isEditing);
   };
 
   useEffect(() => {
-    dispatch(getLocationInventory());
-    if (inventory_id) {
+    if (idr_equipment_id) {
       setLoading(true);
-      dispatch(getInventoryById(inventory_id))
+      dispatch(getIdrEquipmentById(idr_equipment_id))
         .then((data) => {
           setLoading(false);
-          // Extract editable fields
+          // console.log(data)
           setEditableFields({
-            quantity: data.quantity,
-            description: data.description,
-            make: data.make,
-            device_type: data.device_type,
-            color: data.color,
-            size: data.size,
-            location_id: data.location_id,
+            serial_number: data?.serial_number,
+            make: data?.make,
+            model: data?.model,
+            device_type: data?.device_type,
+            mac_address: data?.mac_address,
+            location_name: data?.location_name,
+            location_id: data?.location_id,
+            description: data?.description,
           });
-          // Extract read-only fields
           setReadOnlyFields({
-            model: data.model,
-            qr: data.qr, // Assuming this is how you handle image data
+            image: data?.qr_image,
+            serial_number: data?.serial_number,
           });
         })
         .catch((error) => {
           setLoading(false);
-          console.error("Error fetching inventory item:", error);
-          // Handle error, e.g., show an error message
+          console.error("Error fetching equipment item:", error);
         });
     }
-  }, [dispatch, inventory_id]);
+    dispatch(getLocationInventory()); // Fetch locations
+  }, [dispatch, idr_equipment_id]);
 
   const handleInputChange = (e) => {
-    const { name, value, files } = e.target;
-    if (files) {
-      setReadOnlyFields((prevData) => ({ ...prevData, [name]: files[0] }));
-      const file = e.target.files[0];
-      setSelectedImage(file);
-    } else {
-      setEditableFields((prevData) => ({ ...prevData, [name]: value }));
-    }
+    const { name, value } = e.target;
+    setEditableFields((prevData) => ({ ...prevData, [name]: value }));
   };
+
   const handleLocationChange = (e) => {
-    const selectedLocation = availableLocations.find(
-      (loc) => loc.inventory_location_id === e.target.value
+    const selectedLocation = locationsInventory.find(
+      (loc) => loc.location === e.target.value
     );
-    // console.log(selectedLocation)
     setEditableFields((prevData) => ({
       ...prevData,
-      location: selectedLocation.location,
+      location_name: selectedLocation.location,
       location_id: selectedLocation.inventory_location_id,
     }));
   };
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    editableFields.inventory_id = inventory_id;
-    dispatch(updateInventory(editableFields, navigate));
+    editableFields.equipment_id = idr_equipment_id;
+    dispatch(updateEquipment(editableFields, navigate));
   };
 
   if (loading) {
@@ -112,9 +109,9 @@ const EditInventory = () => {
         <AdminSideNavbar />
         <div className="py-12 px-8 bg-gray-50 w-full h-screen overflow-y-scroll">
           <div className="flex justify-between items-center mb-4">
-            <h1 className="font-bold text-lg">Edit Inventory Item</h1>
+            <h1 className="font-bold text-lg">Edit IDR Equipment Item</h1>
             <div className="flex gap-2">
-              {(access.includes(user_type) && !isEditing) && (
+              {(access.includes(user_type) && !isEditing && type !== 'assign') && (
                 <button
                   className="bg-indigo-600 text-white px-6 py-2 rounded"
                   onClick={handleEditToggle}
@@ -125,7 +122,8 @@ const EditInventory = () => {
               <button
                 type="button"
                 className="border py-2 px-4 rounded"
-                onClick={() => navigate("/inventory")}
+                // onClick={() => navigate("/idr-equipment")}
+                onClick={() => navigate(-1)}
               >
                 Back
               </button>
@@ -149,16 +147,27 @@ const EditInventory = () => {
                   <button
                     type="submit"
                     className="border bg-indigo-600 py-2 px-4 text-white rounded"
-                    disabled={loadingInventory}
+                    disabled={loading}
                   >
-                    {loadingInventory ? "Saving" : "Update"}
+                    {loading ? "Saving" : "Update"}
                   </button>
                 </div>
               )}
             </div>
             <div className="border border-gray-200 mb-4"></div>
             <div className="grid grid-cols-2 gap-8">
-              {/* Editable fields */}
+              <div className="flex flex-col gap-2">
+                <label className="font-normal text-base">Serial Number</label>
+                <input
+                  name="serial_number"
+                  type="text"
+                  value={readOnlyFields.serial_number}
+                  className="px-3 border border-gray-200 h-10 text-sm rounded"
+                  onChange={handleInputChange}
+                  readOnly
+
+                />
+              </div>
               <div className="flex flex-col gap-2">
                 <label className="font-normal text-base">Make</label>
                 <input
@@ -173,10 +182,12 @@ const EditInventory = () => {
               <div className="flex flex-col gap-2">
                 <label className="font-normal text-base">Model</label>
                 <input
+                  name="model"
                   type="text"
-                  value={readOnlyFields.model}
+                  value={editableFields.model}
                   className="px-3 border border-gray-200 h-10 text-sm rounded"
-                  readOnly
+                  onChange={handleInputChange}
+                  disabled={!isEditing}
                 />
               </div>
               <div className="flex flex-col gap-2">
@@ -191,22 +202,11 @@ const EditInventory = () => {
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <label className="font-normal text-base">Color</label>
+                <label className="font-normal text-base">Mac Address</label>
                 <input
-                  name="color"
+                  name="mac_address"
                   type="text"
-                  value={editableFields.color}
-                  className="px-3 border border-gray-200 h-10 text-sm rounded"
-                  onChange={handleInputChange}
-                  disabled={!isEditing}
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <label className="font-normal text-base">Size</label>
-                <input
-                  name="size"
-                  type="text"
-                  value={editableFields.size}
+                  value={editableFields.mac_address}
                   className="px-3 border border-gray-200 h-10 text-sm rounded"
                   onChange={handleInputChange}
                   disabled={!isEditing}
@@ -214,55 +214,49 @@ const EditInventory = () => {
               </div>
               <div className="flex flex-col gap-2">
                 <label className="font-normal text-base">Location</label>
-                <select
-                  name="location_id"
-                  value={editableFields.location_id}
-                  className="px-3 border border-gray-200 h-10 text-sm rounded"
-                  onChange={handleLocationChange}
-                  disabled={!isEditing}
-                >
-                  <option value="">Select location</option>
-                  {availableLocations?.map((location) => (
-                    <option
-                      key={location.inventory_location_id}
-                      value={location.inventory_location_id}
-                    >
-                      {location.location}
-                    </option>
-                  ))}
-                </select>
+                {isEditing ? (
+                  <select
+                    name="location"
+                    className="px-3 border border-gray-200 h-10 text-sm rounded"
+                    onChange={handleLocationChange}
+                    value={editableFields.location_name}
+                  >
+                    <option value="">Select Location</option>
+                    {locationsInventory?.map((ele) => (
+                      <option
+                        key={ele.inventory_location_id}
+                        value={ele.location}
+                      >
+                        {ele.location}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    name="location"
+                    type="text"
+                    value={editableFields.location_name}
+                    className="px-3 border border-gray-200 h-10 text-sm rounded"
+                    disabled
+                  />
+                )}
               </div>
               <div className="flex flex-col gap-2">
-                <label className="font-normal text-base">Quantity</label>
-                <input
-                  name="quantity"
-                  type="number"
-                  value={editableFields.quantity}
-                  placeholder="Type quantity"
-                  className="px-3 border border-gray-200 h-10 text-sm rounded"
-                  onChange={handleInputChange}
-                  required
-                  disabled={!isEditing}
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <label className="font-normal text-base">QR code</label>
+                <label className="font-normal text-base">QR Code</label>
                 <img
-                  src={`https://idr-app-images-bucket.s3.amazonaws.com/${readOnlyFields.qr}`}
+                  src={`https://idr-app-images-bucket.s3.amazonaws.com/${readOnlyFields.image}`}
                   alt="QR Code"
                   className="w-24 h-24 object-cover rounded-md shadow"
                 />
               </div>
-              <div className="flex flex-col gap-2 col-span-2">
+              <div className="flex flex-col gap-2">
                 <label className="font-normal text-base">Description</label>
                 <textarea
                   name="description"
                   value={editableFields.description}
-                  placeholder="Type description"
-                  className="px-3 py-2 border border-gray-200 text-sm rounded resize-y w-full col-span-2"
+                  className="px-3 py-2 border border-gray-200 text-sm rounded resize-y w-full"
                   onChange={handleInputChange}
-                  required
-                  rows={4} // Adjust rows as needed
+                  rows={4}
                   disabled={!isEditing}
                 />
               </div>
@@ -274,4 +268,4 @@ const EditInventory = () => {
   );
 };
 
-export default EditInventory;
+export default EditEquipment;

@@ -31,19 +31,15 @@ const AdminSideNavbar = () => {
       path: "/locations",
       roles: ["Admin", "Subadmin"],
     },
-    {
-      title: "Client Equipments",
-      path: "/client-equipment",
-      roles: ["Admin", "Subadmin"],
-    },
+    // {
+    //   title: "Client Equipment",
+    //   path: "/client-equipment",
+    //   roles: ["Admin", "Subadmin"],
+    // },
     // Add more menu items as needed
   ];
   const idrMenuItems = [
-    // {
-    //   title: "Dashboard",
-    //   path: "/admin/dashboard",
-    //   roles: ["Admin","Subadmin", "IDR Employee", "Client Employee"],
-    // },
+
     {
       title: "IDR Employees",
       path: "/idr-employees",
@@ -60,20 +56,20 @@ const AdminSideNavbar = () => {
       roles: ["Admin", "Subadmin", "IDR Employee"],
     },
     {
-      title: "Inventory Location",
+      title: "Inventory Locations",
       path: "/inventory-locations",
       roles: ["Admin", "Subadmin", "IDR Employee"],
     },
     {
       title: "IDR Equipment and Tools",
-      path: "/company-equipment",
-      roles: ["Admin", "Subadmin", "IDR Employee", "Client Employee"],
+      path: "/idr-equipment",
+      roles: ["Admin", "Subadmin", "IDR Employee",],
     },
-    // {
-    //   title: "Upload CSV File",
-    //   path: "/upload-csv",
-    //   roles: ["Admin", "Client Employee"],
-    // },
+    {
+      title: "Reports",
+      path: "/equipment-report",
+      roles: ["Admin", "Subadmin",],
+    },
     // Add more menu items as needed
   ];
   const mainMenu = ["Admin", "Subadmin"];

@@ -1,4 +1,4 @@
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes,useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useDispatch } from "react-redux";
 import "react-toastify/dist/ReactToastify.css";
@@ -36,13 +36,22 @@ import { logout } from "./reducers/userSlice";
 import Inventory from "./page/idr_inventory/Inventory";
 import AddInventory from "./page/idr_inventory/AddInventory";
 import EditInventory from "./page/idr_inventory/EditInventory";
-import ClientEquipment from "./page/idr_client_equipment/ClientEquipment";
-import AddClientEqiupment from "./page/idr_client_equipment/AddClientEqupment";
-import EditClientEqiupment from "./page/idr_client_equipment/EditClientEqupment";
 import TransferInventory from "./page/idr_inventory/TransferInventory";
 import InventoryLocations from "./page/idr_inventory/InventoryLocations";
+import IdrEuipement from "./page/idr_equipment/Idr_equipment_tool";
+import IdrEquipment from "./page/idr_equipment/Idr_equipment_tool";
+import EditEquipment from "./page/idr_equipment/Edit_Idr_Equipment";
+import TransferIdrEquipment from "./page/idr_equipment/Idr_equipment_transfer";
+import AddIdrEquipment from "./page/idr_equipment/Add_Idr_Equipment";
+import AssignedEquipments from "./page/idr_equipment/AssignedEquipments";
+import EquipmentReport from "./page/report/EquipmentReport";
+import EquipmentReportDetails from "./page/report/EquipmentReportDetails";
+import InventoryReport from "./page/report/InventoryReport";
+import InventoryReportDetails from "./page/report/InventoryReportDetails";
 function App() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+
   const token = localStorage.getItem("user_idr_token");
   axios.defaults.headers.common.Authorization = `Bearer ${token}`;
   axios.interceptors.response.use(
@@ -54,6 +63,7 @@ function App() {
       if (res?.status === 401 && res?.config && !res?.config.__isRetryRequest) {
         localStorage.removeItem("user_idr_token");
         dispatch(logout());
+        navigate("/");
       }
     }
   );
@@ -85,7 +95,10 @@ function App() {
           <Route path="/users" element={<AllUsers />}></Route>
           <Route path="/clients" element={<Client />} />
           <Route path="/add-client" element={<AddNewClient />} />
-          <Route path="/add-idr-employees" element={<AddIDREmployeePage />}></Route>
+          <Route
+            path="/add-idr-employees"
+            element={<AddIDREmployeePage />}
+          ></Route>
           <Route path="/dashboard" element={<Dashboard />}></Route>
           <Route path="/admin/dashboard" element={<AdminDashboard />}></Route>
           <Route path="/users/create" element={<CreateUser />}></Route>
@@ -127,23 +140,32 @@ function App() {
           <Route path="/inventory" element={<Inventory />} />
           <Route path="/inventory-locations" element={<InventoryLocations />} />
           <Route path="/addinventory" element={<AddInventory />} />
-          <Route path="/edit_inventory/:inventory_id" element={<EditInventory />} />
-          <Route path="/company-equipment" element={<ClientEquipment />} />
           <Route
-            path="/add-company-equipment"
-            element={<AddClientEqiupment />}
+            path="/edit_inventory/:inventory_id"
+            element={<EditInventory />}
           />
+          {/* equipmem */}
+          <Route path="/idr-equipment" element={<IdrEquipment />} />
+          <Route path="/assigned-equipment" element={<AssignedEquipments />} />
+          <Route path="/add-company-equipment" element={<AddIdrEquipment />} />
+          <Route path="/edit-company-equipment/:idr_equipment_id" element={<EditEquipment />} />
           <Route
-            path="/edit-company-equipment"
-            element={<EditClientEqiupment />}
+            path="/transfer-company-equipment/:idr_equipment_id"
+            element={<TransferIdrEquipment />}
           />
+
           <Route
             path="/transfer-inventory/:inventory_id"
             element={<TransferInventory />}
           />
-
+          {/* Report */}
+          <Route path="/equipment-report" element={<EquipmentReport />} />
+          <Route path="/inventory-report" element={<InventoryReport />} />
+          <Route path="/equipment-report/:equipmentRreportId" element={< EquipmentReportDetails />} />
+          <Route path="/inventory-report/:inventoryReportId" element={<InventoryReportDetails />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
+        <Route path="/test" element={<IdrEuipement />} />
       </Routes>
     </>
   );

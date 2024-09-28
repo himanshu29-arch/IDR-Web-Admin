@@ -2,14 +2,14 @@ import React from 'react';
 
 
 
-const InventoryTable = ({ inventories }) => {
+const EquipmentTable = ({ equipments }) => {
 
   return (
     <>
-    {inventories.length > 0 && (
+    {equipments.length > 0 && (
     <div className="flex flex-col mt-4 border py-7 px-5 bg-white gap-6">
       <div className="mb-2 flex justify-between">
-        <h1 className="font-normal text-xl mb-2">Inventory Parts Used To Complete Service</h1>
+        <h1 className="font-normal text-xl mb-2">Assigned Equipments</h1>
 
       </div>
 
@@ -21,24 +21,24 @@ const InventoryTable = ({ inventories }) => {
               <th className="border px-4 py-2">Model</th>
               <th className="border px-4 py-2">Make</th>
               <th className="border px-4 py-2">Device Type</th>
-              <th className="border px-4 py-2">Quantity</th>
+              <th className="border px-4 py-2">Location</th>
             </tr>
           </thead>
           <tbody>
-            {inventories?.map((inventory, index) => (
-              <tr key={inventory.inventory_id} className="bg-white text-sm">
+            {equipments?.map((equipment, index) => (
+              <tr key={equipment.equipment_id} className="bg-white text-sm">
                 <td className="border px-4 py-2">
-                  {inventory.model}
+                  {equipment.model}
                 </td>
                 <td className="border px-4 py-2">
-                  {inventory.make}
+                  {equipment.make}
                 </td>
                 <td className="border px-4 py-2">
-                {inventory.device_type}
+                {equipment.device_type}
                 </td>
                 
                 <td className="border px-4 py-2">
-                {inventory.quantity}
+                {equipment.location_name}
                 </td>
 
               </tr>
@@ -53,4 +53,4 @@ const InventoryTable = ({ inventories }) => {
   );
 };
 
-export default InventoryTable;
+export default EquipmentTable;

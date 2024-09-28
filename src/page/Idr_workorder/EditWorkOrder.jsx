@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Link, useParams } from "react-router-dom";
+import { FaDownload } from "react-icons/fa";
+import axios from '../../axios-config';
 import Header from "../../Components/Header";
 import SideNavbar from "../../Components/AdminSideNavbar";
 import NotesTable from "../../Components/NotesTable";
@@ -9,6 +11,7 @@ import WorkOrderCard from "../../Components/WorkOrderCard";
 // import AssigneePeopleCard from "../../Components/AssigneePeopleCard"
 import ShowTechnicians from "../../Components/ShowTechnicians"
 import InventoryTable from "../../Components/InventoryTable"
+import EquipmentTable from "../../Components/EquipmentTable"
 import {
   getWorkOrderDetails,
   updateNotes,
@@ -24,7 +27,7 @@ import Loader from "../../Images/ZZ5H.gif"
 const EditWorkOrder = () => {
   const { workOrderId } = useParams();
   const dispatch = useDispatch();
-  const { workOrderDetails, loading, error } = useSelector(
+  const { workOrderDetails, loading, error,loadingDetails } = useSelector(
     (state) => state.workOrder
   );
   // Redux state selectors
@@ -39,7 +42,10 @@ const EditWorkOrder = () => {
   const [notes, setNotes] = useState([]);
   const [assignees, setAssignees] = useState([]);
   const [inventories, setInventories] = useState([]);
-
+  const [equipments, setEquipments] = useState([]);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isWorkOrderEditing, setIsWorkOrderEditing] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false); // Loading state
   useEffect(() => {
     dispatch(getWorkOrderDetails(workOrderId));
     dispatch(getClients());
@@ -54,6 +60,7 @@ const EditWorkOrder = () => {
       setNotes(workOrderDetails.notes || []);
       setAssignees(workOrderDetails.assignees || []);
       setInventories(workOrderDetails.inventories || []);
+      setEquipments(workOrderDetails.equipment || []);
     }
   }, [workOrderDetails]);
   useEffect(() => {
@@ -189,6 +196,7 @@ const EditWorkOrder = () => {
   const handleSaveTicket = () => {
     const filteredWorkOrder = getFilteredWorkOrder(workOrder);
     dispatch(updateTicket(filteredWorkOrder));
+    setIsEditing(!isEditing)
   };
   
 
@@ -210,6 +218,7 @@ const EditWorkOrder = () => {
   const handleSaveTechnician = (index) => {
     const filteredTechnician = getFilteredTechnician(technicians[index]);
     dispatch(updateTechnician(filteredTechnician));
+    setIsWorkOrderEditing(!isWorkOrderEditing)
   };
   
   const getFilteredNote = (note) => {
@@ -230,27 +239,45 @@ const EditWorkOrder = () => {
     const filteredNote = getFilteredNote(notes[index]);
     dispatch(updateNotes(filteredNote));
   };
-  
-  const getFilteredAssignees = (technician) => {
-    const allowedFields = [
-      "technician_id", "work_order_id", "technician_name", "project_manager","technician_user_id","pm_user_id"
-    ];
-    const filteredAssignees = {};
-    allowedFields.forEach(field => {
-      if (Object.prototype.hasOwnProperty.call(technician, field)) {
-        filteredAssignees[field] = technician[field];
-      }
-    });
-    return filteredAssignees;
-  };
-  
-  
-  const handleSaveAssignee = (index) => {
-    const filteredAssignees = getFilteredAssignees(technicians[index]);
-    // dispatch(updateAssignees(filteredAssignees));
-  };
 
-  if (loading) {
+  const handleDownloadPdf = async () => {
+    try {
+      setIsDownloading(true); // Start loading
+  
+      // Make sure the request is sending the correct headers
+      const response = await axios.post(
+        `/work_order/wo_pdf/${workOrderId}`, 
+        {},  // Sending an empty body, replace if needed
+        {
+          headers: {
+            'Content-Type': 'application/json', // If backend expects this
+          },
+          responseType: 'blob', // For PDF download
+        }
+      );
+  
+      // Debugging response
+      // console.log(response, "pdf response");
+  
+      const pdfBlob = new Blob([response.data], { type: "application/pdf" });
+      const downloadUrl = window.URL.createObjectURL(pdfBlob);
+      
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.download = `${workOrder?.ticket_number}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      
+      document.body.removeChild(link);
+      setIsDownloading(false); // Stop loading
+    } catch (error) {
+      console.error("Error downloading PDF:", error);
+      setIsDownloading(false); // Stop loading in case of error
+    }
+  };
+  
+  
+  if (loadingDetails) {
     return (
       <div className="flex justify-center items-center h-screen">
         <img className="w-20 h-20" src={Loader} alt="Loading..." />
@@ -258,9 +285,6 @@ const EditWorkOrder = () => {
     );
   }
 
-  // if (error) {
-  //   return <div>Error: {error}</div>;
-  // }
 
   if (!workOrder) {
     return <div className="text-center mt-5">No work order details found</div>;
@@ -280,6 +304,41 @@ const EditWorkOrder = () => {
                   Cancel
                 </button>
               </Link>
+              {/* Download PDF Button */}
+            <button
+              onClick={handleDownloadPdf}
+              className="border border-blue-500 bg-blue-500 text-white px-6 py-2 rounded flex items-center"
+              disabled={isDownloading}
+            >
+              {isDownloading ? (
+                // Display loading spinner while downloading
+                <svg
+                  className="animate-spin h-5 w-5 mr-2 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                  ></path>
+                </svg>
+              ) : (
+                <>
+                Download WO PDF <FaDownload className="ml-1" />
+                </>
+                
+              )}
+            </button>
             </div>
           </div>
           {/* update Work order ticket details */}
@@ -291,6 +350,8 @@ const EditWorkOrder = () => {
             handleWorkOrderChange={handleWorkOrderChange}
             handleSaveTicket={handleSaveTicket}
             loading={loading}
+            isEditing={isEditing}
+            setIsEditing={setIsEditing}
           />
           {/* update Technicians */}
           <TechniciansCard
@@ -298,13 +359,14 @@ const EditWorkOrder = () => {
             handleTechnicianChange={handleTechnicianChange}
             handleSaveTechnicians={handleSaveTechnician}
             loading={loading}
+            isWorkOrderEditing={isWorkOrderEditing}
+            setIsWorkOrderEditing={setIsWorkOrderEditing}
           />
             {/* update Assignee */}
             <ShowTechnicians
             assignees={assignees}
             idrEmployees={idrEmployees}
             handleAssigneeChange={handleAssigneeChange}
-            handleSaveAssignee={handleSaveAssignee}
             loading={loading}
             workOrderId={workOrderId}
           />
@@ -319,6 +381,10 @@ const EditWorkOrder = () => {
           {/* InventoryTable */}
           <InventoryTable
              inventories={inventories}
+          />
+          {/* Equipments Table */}
+          <EquipmentTable
+             equipments={equipments}
           />
         </div>
       </div>

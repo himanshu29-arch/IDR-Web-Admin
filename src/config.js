@@ -53,7 +53,25 @@ const apiConfig = {
   updateInventory: '/inventory/update',
   inventoryWorkOrderAssign:'/inventory/work_order/assign',
   inventoryTransfer:'/inventory/location/transfer',
-  workOrderByClient:'/work_order/by_client'
+  workOrderByClient:'/work_order/by_client',
+  deleteInventoryLocation:'/inv_loc',
+  techniciansListByWorkorder:'/work_order/technician/by_work_order',
+  addEquipment:'/equipment/add',
+  editEquipment:'/equipment/update',
+  deleteEquipment:'/equipment',
+  getEquipments:'/equipment/all',
+  getEquimentById:'/equipment',
+  transferEquipmentToWorkorder:'/equipment/transfer/work_order',
+  transferEquipmentToEmployee:'/equipment/assign',
+  equipmentReturnRequestList:'/equipment/list/return',
+  confirmReturnedEquipment:'/equipment/confirm/return',
+  equipmentAssigned:'/equipment/assigned',
+  equipmentAcceptRejectInvitations:'/equipment/accept',
+  equipmentInvitationsList:'/equipment/invitations',
+  getInventoryReportList:'/reports/inventory/all',
+  getInventoryReportById:'/reports/inventory',
+  getEquipmentReportList:'/reports/equipment/all',
+  getEquipmentReportById:'/reports/equipment',
 };
 
 export { API_BASE_URL, apiConfig };
